@@ -23,7 +23,7 @@ from boxbranding import getBoxType, getMachineBrand, getMachineName, getDriverDa
 VERSION = "Version 6.0 openATV"
 
 HaveGZkernel = True
-if getMachineBuild() in ('et1x000',"vuuno4k", "vuultimo4k", "vusolo4k", "spark", "spark7162", "hd51", "hd52", "sf4008", "dags7252", "gb7252", "vs1500","h7"):
+if getMachineBuild() in ('azboxme','azboxminime','et1x000',"vuuno4k", "vuultimo4k", "vusolo4k", "spark", "spark7162", "hd51", "hd52", "sf4008", "dags7252", "gb7252", "vs1500","h7"):
 	HaveGZkernel = False
 
 def Freespace(dev):
@@ -81,7 +81,7 @@ class ImageBackup(Screen):
 		self["key_green"] = StaticText("USB")
 		self["key_red"] = StaticText("HDD")
 		self["key_blue"] = StaticText(_("Exit"))
-		if SystemInfo["HaveMultiBoot"]:
+		if SystemInfo["HaveMultiBoot"] and self.MODEL not in ("azboxme","azboxminime"):
 			self["key_yellow"] = StaticText(_("STARTUP"))
 			self["info-multi"] = Label(_("You can select with yellow the OnlineFlash Image\n or select Recovery to create a USB Disk Image for clean Install."))
 		else:
@@ -133,7 +133,7 @@ class ImageBackup(Screen):
 				self.doFullBackup(USB_DEVICE)
 
 	def yellow(self):
-		if SystemInfo["HaveMultiBoot"]:
+		if SystemInfo["HaveMultiBoot"] and self.MODEL not in ("azboxme","azboxminime"):
 			self.selection = self.selection + 1
 			if self.selection == len(self.list):
 				self.selection = 0
@@ -157,7 +157,7 @@ class ImageBackup(Screen):
 
 	def list_files(self, PATH):
 		files = []
-		if SystemInfo["HaveMultiBoot"]:
+		if SystemInfo["HaveMultiBoot"] and not getMachineBuild().startswith('azboxm'):
 			self.path = PATH
 			for name in listdir(self.path):
 				if path.isfile(path.join(self.path, name)):
@@ -186,7 +186,7 @@ class ImageBackup(Screen):
 		self.IMAGEVERSION = self.imageInfo() #strftime("%Y%m%d", localtime(self.START))
 		if "ubi" in self.ROOTFSTYPE.split():
 			self.MKFS = "/usr/sbin/mkfs.ubifs"
-		elif "tar.bz2" in self.ROOTFSTYPE.split() or SystemInfo["HaveMultiBoot"]:
+		elif "tar.bz2" in self.ROOTFSTYPE.split() or (SystemInfo["HaveMultiBoot"] and self.MODEL not in ("azboxme","azboxminime")):
 			self.MKFS = "/bin/tar"
 			self.BZIP2 = "/usr/bin/bzip2"
 		else:
@@ -194,6 +194,7 @@ class ImageBackup(Screen):
 
 		self.UBINIZE = "/usr/sbin/ubinize"
 		self.NANDDUMP = "/usr/sbin/nanddump"
+		self.FLASHKERNEL = "/usr/sbin/flashkernel"
 		self.WORKDIR= "%s/bi" %self.DIRECTORY
 		self.TARGET="XX"
 
@@ -202,11 +203,15 @@ class ImageBackup(Screen):
 			text = "%s not found !!" %self.MKFS
 			self.session.open(MessageBox, _(text), type = MessageBox.TYPE_ERROR)
 			return
-		if not path.exists(self.NANDDUMP):
+		if not path.exists(self.NANDDUMP) and self.MODEL not in ("azboxme","azboxminime"):
 			text = "%s not found !!" %self.NANDDUMP
 			self.session.open(MessageBox, _(text), type = MessageBox.TYPE_ERROR)
 			return
-
+		if not path.exists(self.FLASHKERNEL) and self.MODEL in ("azboxme","azboxminime"):
+			text = "%s not found !!" %self.FLASHKERNEL
+			self.session.open(MessageBox, _(text), type = MessageBox.TYPE_ERROR)
+			return
+			
 		self.SHOWNAME = "%s %s" %(self.MACHINEBRAND, self.MODEL)
 		self.MAINDESTOLD = "%s/%s" %(self.DIRECTORY, self.MODEL)
 		self.MAINDEST = "%s/%s" %(self.DIRECTORY,self.IMAGEFOLDER)
@@ -222,10 +227,10 @@ class ImageBackup(Screen):
 		if self.ROOTFSTYPE == "ubi":
 			self.message += _("because of the used filesystem the back-up\n")
 			self.message += _("will take about 3-12 minutes for this system\n")
-		elif SystemInfo["HaveMultiBoot"] and self.list[self.selection] == "Recovery":
+		elif SystemInfo["HaveMultiBoot"] and self.list[self.selection] == "Recovery" and self.MODEL not in ("azboxme","azboxminime"):
 			self.message += _("because of the used filesystem the back-up\n")
 			self.message += _("will take about 30 minutes for this system\n")
-		elif "tar.bz2" in self.ROOTFSTYPE.split() or SystemInfo["HaveMultiBoot"]:
+		elif "tar.bz2" in self.ROOTFSTYPE.split() or (SystemInfo["HaveMultiBoot"] and self.MODEL not in ("azboxme","azboxminime")):
 			self.message += _("because of the used filesystem the back-up\n")
 			self.message += _("will take about 1-4 minutes for this system\n")
 		else:
@@ -240,7 +245,7 @@ class ImageBackup(Screen):
 		if not path.exists("/tmp/bi/root"):
 			makedirs("/tmp/bi/root")
 		system("sync")
-		if SystemInfo["HaveMultiBoot"]:
+		if SystemInfo["HaveMultiBoot"] and self.MODEL not in ("azboxme","azboxminime"):
 			system("mount /dev/%s /tmp/bi/root" %self.MTDROOTFS)
 		else:
 			system("mount --bind / /tmp/bi/root")
@@ -249,7 +254,7 @@ class ImageBackup(Screen):
 			cmd1 = "%s --root=/tmp/bi/root --faketime --output=%s/root.jffs2 %s" % (self.MKFS, self.WORKDIR, self.MKUBIFS_ARGS)
 			cmd2 = None
 			cmd3 = None
-		elif "tar.bz2" in self.ROOTFSTYPE.split() or SystemInfo["HaveMultiBoot"]:
+		elif "tar.bz2" in self.ROOTFSTYPE.split() or (SystemInfo["HaveMultiBoot"] and self.MODEL not in ("azboxme","azboxminime")):
 			cmd1 = "%s -cf %s/rootfs.tar -C /tmp/bi/root --exclude=/var/nmbd/* ." % (self.MKFS, self.WORKDIR)
 			cmd2 = "%s %s/rootfs.tar" % (self.BZIP2, self.WORKDIR)
 			cmd3 = None
@@ -292,10 +297,12 @@ class ImageBackup(Screen):
 		cmdlist.append('echo " "')
 		cmdlist.append('echo "Create: kerneldump"')
 		cmdlist.append('echo " "')
-		if SystemInfo["HaveMultiBoot"]:
+		if SystemInfo["HaveMultiBoot"] and self.MODEL not in ("azboxme","azboxminime"):
 			cmdlist.append("dd if=/dev/%s of=%s/kernel.bin" % (self.MTDKERNEL ,self.WORKDIR))
 		elif self.MTDKERNEL == "mmcblk0p1" or self.MTDKERNEL == "mmcblk0p3":
 			cmdlist.append("dd if=/dev/%s of=%s/%s" % (self.MTDKERNEL ,self.WORKDIR, self.KERNELBIN))
+		elif self.MODEL in ("azboxme","azboxminime"):
+			cmdlist.append("flashkernel r %s/vmlinux.gz" % (self.WORKDIR))
 		else:
 			cmdlist.append("nanddump -a -f %s/vmlinux.gz /dev/%s" % (self.WORKDIR, self.MTDKERNEL))
 		cmdlist.append('echo " "')
@@ -304,7 +311,7 @@ class ImageBackup(Screen):
 			cmdlist.append('echo "Check: kerneldump"')
 		cmdlist.append("sync")
 
-		if SystemInfo["HaveMultiBoot"] and self.list[self.selection] == "Recovery":
+		if SystemInfo["HaveMultiBoot"] and self.list[self.selection] == "Recovery" and self.MODEL not in ("azboxme","azboxminime"):
 			GPT_OFFSET=0
 			GPT_SIZE=1024
 			BOOT_PARTITION_OFFSET = int(GPT_OFFSET) + int(GPT_SIZE)
@@ -398,14 +405,14 @@ class ImageBackup(Screen):
 			system('mv %s/rootfs.tar.bz2 %s/rootfs.tar.bz2' %(self.WORKDIR, self.MAINDEST))
 		else:
 			system('mv %s/root.%s %s/%s' %(self.WORKDIR, self.ROOTFSTYPE, self.MAINDEST, self.ROOTFSBIN))
-		if SystemInfo["HaveMultiBoot"]:
+		if SystemInfo["HaveMultiBoot"] and self.MODEL not in ("azboxme","azboxminime"):
 			system('mv %s/kernel.bin %s/kernel.bin' %(self.WORKDIR, self.MAINDEST))
 		elif self.MTDKERNEL == "mmcblk0p1" or self.MTDKERNEL == "mmcblk0p3":
 			system('mv %s/%s %s/%s' %(self.WORKDIR, self.KERNELBIN, self.MAINDEST, self.KERNELBIN))
 		else:
 			system('mv %s/vmlinux.gz %s/%s' %(self.WORKDIR, self.MAINDEST, self.KERNELBIN))
 
-		if SystemInfo["HaveMultiBoot"] and self.list[self.selection] == "Recovery":
+		if SystemInfo["HaveMultiBoot"] and self.list[self.selection] == "Recovery" and self.MODEL not in ("azboxme","azboxminime"):
 			system('mv %s/disk.img %s/disk.img' %(self.WORKDIR, self.MAINDEST))
 		elif self.MODEL in ("vuultimo4k","vusolo4k", "vuduo2", "vusolo2", "vusolo", "vuduo", "vuultimo", "vuuno"):
 			cmdlist.append('echo "This file forces a reboot after the update." > %s/reboot.update' %self.MAINDEST)
@@ -413,6 +420,8 @@ class ImageBackup(Screen):
 			cmdlist.append('echo "This file forces the update." > %s/force.update' %self.MAINDEST)
 		elif self.MODEL in ("novaip" , "zgemmai55" , "sf98", "xpeedlxpro",'evoslim'):
 			cmdlist.append('echo "This file forces the update." > %s/force' %self.MAINDEST)
+		elif self.MODEL in ("azboxme","azboxminime"):
+			cmdlist.append('echo "This file is not actually used." > %s/force' %self.MAINDEST)
 		else:
 			cmdlist.append('echo "rename this file to "force" to force an update without confirmation" > %s/noforce' %self.MAINDEST)
 
@@ -454,7 +463,7 @@ class ImageBackup(Screen):
 			print 'NOFORCE bin file not found'
 			file_found = False
 
-		if SystemInfo["HaveMultiBoot"] and not self.list[self.selection] == "Recovery":
+		if SystemInfo["HaveMultiBoot"] and not self.list[self.selection] == "Recovery" and self.MODEL not in ("azboxme","azboxminime"):
 			cmdlist.append('echo "_________________________________________________\n"')
 			cmdlist.append('echo "Multiboot Image created on:" %s' %self.MAINDEST)
 			cmdlist.append('echo "and there is made an extra copy on:"')

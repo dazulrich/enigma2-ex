@@ -57,8 +57,10 @@ class MultiBootStartup(ConfigListScreen, Screen):
 			"ok": self.save,
 			"info": self.info,
 		}, -2)
-
-		self.getCurrent()
+		if getMachineBuild().startswith('azboxm'):
+			self.getCurrentAZ()
+		else:
+			self.getCurrent()
 		self.onLayoutFinish.append(self.layoutFinished)
 
 	def info(self):
@@ -100,7 +102,7 @@ class MultiBootStartup(ConfigListScreen, Screen):
 
 	def rename(self):
 		self.oldname = self.list[self.selection]
-		if self.oldname:
+		if self.oldname and not getMachineBuild().startswith('azboxm'):
 			self.session.openWithCallback(self.renameCB, VirtualKeyBoard, title=_("Please enter new name:"), text=self.oldname)
 
 	def renameCB(self, newname):
@@ -251,6 +253,65 @@ class MultiBootStartup(ConfigListScreen, Screen):
 		self.startup_option()
 		self["description"].setText(_("Current Bootsettings: %s (%s)%s") %(bootname,image,bootoption))
 
+	def getCurrentAZ(self):
+		self.bootloaderList = ('NA',)
+		self.enable_bootnamefile = False
+		self.selection = None
+		self.option_enabled = None
+		self.option = 0
+		current_bootnum = -1
+		bootname = None
+		self.list = [[0,"BOOT 0"], [2,"BOOT 1"], [3,"BOOT 2"]]
+		#get bootnum from .boot file
+		if not path.isfile('/boot/.boot'):
+			system("mount -t jffs2 mtd2 /boot/")
+		if path.isfile('/boot/.boot'):
+			current_bootnum = int(self.readlineFile('/boot/.boot'))
+		system("umount -fl /boot")
+		# print "[MultiBootStartup]", current_bootnum	
+		bootnum = current_bootnum
+		idx = 0
+		for x,y in self.list:
+			if x == bootnum:
+				self.selection = idx
+				bootnum = x
+				bootname = y
+				break
+			idx += 1
+		if self.selection is None:
+			print "[MultiBootStartup] loop1"
+			idx = 0
+			for x,y in self.list:
+				if x == bootnum:
+					self.selection = idx
+					bootnum = x
+					bootname = y
+					break
+				idx += 1
+		#bootnum searching ...
+		if self.selection is None:
+			print "[MultiBootStartup] loop2"
+			idx = 0
+			for x,y in self.list:
+				line = bootnum
+				if line == x:
+					bootnum = x
+					self.selection = idx
+					bootname = y
+					break
+				idx += 1
+		#bootnum not found
+		if self.selection is None:
+			bootnum = -1
+			self.selection = -1
+			bootname = "Invalid Boot Partition"
+		self.bootnum = bootnum
+		self.bootname = bootname
+		
+		self.startup()
+		self.startup_option()
+		self["description"].setText(_("Current Bootpartition: %d (%s)") %(bootnum,bootname))
+
 	def layoutFinished(self):
 		self.setTitle(self.title)
 
@@ -312,6 +373,9 @@ class MultiBootStartup(ConfigListScreen, Screen):
 		return ret
 
 	def save(self):
+		if getMachineBuild().startswith('azboxm'):
+			self.saveAZ()
+			return
 		print "[MultiBootStartup] select new startup: ", self.list[self.selection]
 		ret = system("cp -f '/boot/%s' /boot/STARTUP" %self.list[self.selection])
 		if ret:
@@ -383,6 +447,24 @@ class MultiBootStartup(ConfigListScreen, Screen):
 
 		self.session.openWithCallback(self.restartBOX,MessageBox, message, MessageBox.TYPE_YESNO)
 
+	def saveAZ(self):
+		print "[MultiBootStartup] select new startup: ", self.list[self.selection][0]
+		if not path.isfile('/boot/.boot'):
+			system("mount -t jffs2 mtd2 /boot/")
+		ret = system("echo '%d' > /boot/.boot" %self.list[self.selection][0])
+		if ret:
+			self.session.open(MessageBox, _("echo '%d' > /boot/.boot failed!") %self.list[self.selection][0], MessageBox.TYPE_ERROR)
+			self.getCurrentAZ()
+			return
+		writeoption = already = failboot = False
+		newboot = boot = int(self.readlineFile('/boot/.boot'))
+
+		if path.isfile('/boot/.boot'):
+			system("umount -fl /boot")
+		
+		message = _("Do you want to reboot now with selected image?")
+		self.session.openWithCallback(self.restartBOX,MessageBox, message, MessageBox.TYPE_YESNO)
+		
 	def cancel(self):
 		self.close()
 
