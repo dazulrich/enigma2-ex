@@ -96,7 +96,9 @@ eDVBResourceManager::eDVBResourceManager()
 		if (eDVBAdapterLinux::isusb(num_adapter))
 		{
 			eDVBAdapterLinux *adapter = new eDVBUsbAdapter(num_adapter);
+			eDebug("[UB]: ATSC debug.. add USB adapter");
 			addAdapter(adapter);
+			eDebug("[UB]: ATSC debug.. UsbAdapter added");
 		}
 		num_adapter++;
 	}
@@ -105,7 +107,9 @@ eDVBResourceManager::eDVBResourceManager()
 	{
 		eDVBAdapterLinux *adapter = new eDVBAdapterLinux(0);
 		adapter->scanDevices();
+		eDebug("[UB]: ATSC debug.. scan done");
 		addAdapter(adapter, true);
+		eDebug("[UB]: ATSC debug.. AdapterLinux added");
 	}
 
 	int fd = open("/proc/stb/info/model", O_RDONLY);
@@ -240,10 +244,12 @@ void eDVBAdapterLinux::scanDevices()
 		snprintf(filename, sizeof(filename), "/dev/dvb/adapter%d/frontend%d", m_nr, num_fe);
 		eDVBFrontend *fe;
 		std::string name = filename;
+		eDebug("[UB]: ATSC debug.. FE filename=%s",filename);
 		std::map<std::string, std::string>::iterator it = mappedFrontendName.find(name);
 		if (it != mappedFrontendName.end()) name = it->second;
 
 		{
+			eDebug("[UB]: ATSC debug..scanDevices loop 1");
 			int ok = 0;
 			fe = new eDVBFrontend(name.c_str(), num_fe, ok, true);
 			if (ok)
@@ -251,6 +257,7 @@ void eDVBAdapterLinux::scanDevices()
 		}
 
 		{
+			eDebug("[UB]: ATSC debug..scanDevices loop 2");
 			int ok = 0;
 			fe = new eDVBFrontend(name.c_str(), num_fe, ok, false, fe);
 			if (ok)
@@ -357,38 +364,24 @@ eDVBUsbAdapter::eDVBUsbAdapter(int nr)
 	pumpThread = 0;
 
 	int num_fe = 0;
-
-	demuxFd = vtunerFd = pipeFd[0] = pipeFd[1] = -1;
-
-	/* we need to know exactly what frontend is internal or initialized! */
-	fd = open("/proc/bus/nim_sockets", O_RDONLY);
-	if (fd < 0)
+	while (1)
 	{
-		eDebug("Cannot open /proc/bus/nim_sockets");
-		goto error;
+		//
+		// Some frontend devices might have been just created, if
+		 //* they are virtual (vtuner) frontends.
+		 //* In that case, we cannot be sure the devicenodes are available yet.
+		 //* So it is safer to scan for sys entries, than for device nodes
+		 //
+		snprintf(filename, sizeof(filename), "/sys/class/dvb/dvb0.frontend%d", num_fe);
+		if (::access(filename, X_OK) < 0) break;
+		num_fe++;
 	}
-	rd = read(fd, buffer, sizeof(buffer));
-	if (rd < 0)
-	{
-		eDebug("Cannot read /proc/bus/nim_sockets");
-		goto error;
-	}
-	buf_pos = buffer;
-	while ((buf_pos = strstr(buf_pos, "Frontend_Device: ")) != NULL)
-	{
-		int num_fe_tmp;
-		if (sscanf(buf_pos, "Frontend_Device: %d", &num_fe_tmp) == 1)
-		{
-			if (num_fe_tmp > num_fe)
-				num_fe = num_fe_tmp;
-		}
-		buf_pos += 1;
-	}
-	num_fe++;
 	snprintf(filename, sizeof(filename), "/dev/dvb/adapter0/frontend%d", num_fe);
 	virtualFrontendName = filename;
 
-	/* find the device name */
+	demuxFd = vtunerFd = pipeFd[0] = pipeFd[1] = -1;
+
+	// find the device name //
 	snprintf(filename, sizeof(filename), "/sys/class/dvb/dvb%d.frontend0/device/product", nr);
 	file = ::open(filename, O_RDONLY);
 	if (file < 0)
@@ -427,14 +420,14 @@ eDVBUsbAdapter::eDVBUsbAdapter(int nr)
 
 	if (!name[0])
 	{
-		/* fallback to the dvb_frontend_info name */
+		// fallback to the dvb_frontend_info name //
 		int len = MIN(sizeof(fe_info.name), sizeof(name) - 1);
 		strncpy(name, fe_info.name, len);
 		name[len] = 0;
 	}
 	if (name[0])
 	{
-		/* strip trailing LF / CR / whitespace */
+		// strip trailing LF / CR / whitespace //
 		int len = strlen(name);
 		char *tmp = name;
 		while (len && (strchr(" \n\r\t", tmp[len - 1]) != NULL))
@@ -444,7 +437,7 @@ eDVBUsbAdapter::eDVBUsbAdapter(int nr)
 	}
 	if (!name[0])
 	{
-		/* we did not find a usable name, fallback to a default */
+		// we did not find a usable name, fallback to a default //
 		snprintf(name, sizeof(name), "usb frontend");
 	}
 
@@ -471,7 +464,134 @@ eDVBUsbAdapter::eDVBUsbAdapter(int nr)
 		goto error;
 	}
 
+
+/*	pumpThread = 0;
+
+	int num_fe = 0;
+	while (1)
+	{
+		//
+		// Some frontend devices might have been just created, if
+		 * they are virtual (vtuner) frontends.
+		 * In that case, we cannot be sure the devicenodes are available yet.
+		 * So it is safer to scan for sys entries, than for device nodes
+		 //
+		snprintf(filename, sizeof(filename), "/sys/class/dvb/dvb0.frontend%d", num_fe);
+		if (::access(filename, X_OK) < 0) break;
+		num_fe++;
+	}
+	snprintf(filename, sizeof(filename), "/dev/dvb/adapter0/frontend%d", num_fe);
+	virtualFrontendName = filename;
+
+	demuxFd = vtunerFd = pipeFd[0] = pipeFd[1] = -1;
+
+	// find the device name //
+	snprintf(filename, sizeof(filename), "/sys/class/dvb/dvb%d.frontend0/device/product", nr);
+	file = ::open(filename, O_RDONLY);
+	if (file < 0)
+	{
+		snprintf(filename, sizeof(filename), "/sys/class/dvb/dvb%d.frontend0/device/manufacturer", nr);
+		file = ::open(filename, O_RDONLY);
+	}
+
+	if (file >= 0)
+	{
+		int len = singleRead(file, name, sizeof(name) - 1);
+		if (len >= 0)
+		{
+			name[len] = 0;
+		}
+		::close(file);
+		file = -1;
+	}
+
+	snprintf(filename, sizeof(filename), "/dev/dvb/adapter%d/frontend0", nr);
+	frontend = open(filename, O_RDWR);
+	if (frontend < 0)
+	{
+		eDebug("[UB]: ATSC debug.. FE something went wrong! #1");
+		goto error;
+	}
+	if (::ioctl(frontend, FE_GET_INFO, &fe_info) < 0)
+	{
+		eDebug("[UB]: ATSC debug.. FE something went wrong! #2");
+		::close(frontend);
+		frontend = -1;
+		goto error;
+	}
+
+	struct dtv_properties props;
+	struct dtv_property prop[1];
+
+	prop[0].cmd = DTV_ENUM_DELSYS;
+	memset(prop[0].u.buffer.data, 0, sizeof(prop[0].u.buffer.data));
+	prop[0].u.buffer.len = 0;
+	props.num = 1;
+	props.props = prop;
+
+	if (ioctl(frontend, FE_GET_PROPERTY, &props) < 0)
+		eDebug("[UB] FE_GET_PROPERTY DTV_ENUM_DELSYS failed %m");
+
+	eDebug("[UB]: Supported delivery system%s: \n",
+			(prop[0].u.buffer.len > 1) ? "s" : "");
+	
+	::close(frontend);
+	frontend = -1;
+
+	usbFrontendName = filename;
+
+	if (!name[0])
+	{
+		// fallback to the dvb_frontend_info name //
+		eDebug("[UB]: ATSC debug..fallback to the dvb_frontend_info name");
+		int len = MIN(sizeof(fe_info.name), sizeof(name) - 1);
+		strncpy(name, fe_info.name, len);
+		name[len] = 0;
+	}
+	if (name[0])
+	{
+		// strip trailing LF / CR / whitespace //
+		int len = strlen(name);
+		char *tmp = name;
+		while (len && (strchr(" \n\r\t", tmp[len - 1]) != NULL))
+		{
+			tmp[--len] = 0;
+		}
+	}
+	if (!name[0])
+	{
+		// we did not find a usable name, fallback to a default //
+		eDebug("[UB]: ATSC debug..fallback to a default");
+		snprintf(name, sizeof(name), "usb frontend");
+	}
+
+	snprintf(filename, sizeof(filename), "/dev/dvb/adapter%d/demux0", nr);
+	demuxFd = open(filename, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
+	if (demuxFd < 0)
+	{
+		eDebug("[UB]: ATSC debug.. Demux something went wrong! #1");
+		goto error;
+	}
+
+	while (vtunerFd < 0)
+	{
+		snprintf(filename, sizeof(filename), "/dev/misc/vtuner%d", vtunerid);
+		if (::access(filename, F_OK) < 0) break;
+		vtunerFd = open(filename, O_RDWR | O_CLOEXEC);
+		if (vtunerFd < 0)
+		{
+			vtunerid++;
+		}
+	}
+
+	if (vtunerFd < 0)
+	{
+		goto error;
+	}
+*/
 	eDebug("linking adapter%d/frontend0 to vtuner%d", nr, vtunerid);
+
+	eDebug("[UB]: ATSC debug..fe_info.type=%s",fe_info.type);
 
 	switch (fe_info.type)
 	{
@@ -514,13 +634,29 @@ eDVBUsbAdapter::eDVBUsbAdapter(int nr)
 #define VTUNER_SET_DELSYS 32
 #define VTUNER_SET_ADAPTER 33
 	ioctl(vtunerFd, VTUNER_SET_NAME, name);
+	eDebug("[UB]: ATSC debug..VTUNER_SET_NAME: %d %m\n", errno);
 	ioctl(vtunerFd, VTUNER_SET_TYPE, type);
+	eDebug("[UB]: ATSC debug..VTUNER_SET_TYPE: %d %m\n", errno);
+	ioctl(vtunerFd, VTUNER_SET_FE_INFO, &fe_info);
+	eDebug("[UB]: ATSC debug..VTUNER_SET_FE_INFO: %d %m\n", errno);
+//	if (prop[0].u.buffer.len > 0)
+//		ioctl(vtunerFd, VTUNER_SET_DELSYS, prop[0].u.buffer.data);
+//	unsigned char delsys[8];
+	/* delsys overwrite */
+//	delsys[0] = SYS_DVBC_ANNEX_B;
+//	delsys[1] = SYS_ATSC;
+//	delsys[2] = SYS_UNDEFINED;
+//	ioctl(vtunerFd, VTUNER_SET_DELSYS, delsys);
+	
 	ioctl(vtunerFd, VTUNER_SET_HAS_OUTPUTS, "no");
 	ioctl(vtunerFd, VTUNER_SET_ADAPTER, nr);
 
 	memset(pidList, 0xff, sizeof(pidList));
-
+	
+	eDebug("[UB]: ATSC debug..usbFrontendName=%s",usbFrontendName);
+	
 	mappedFrontendName[virtualFrontendName] = usbFrontendName;
+
 	pipe(pipeFd);
 	running = true;
 	pthread_create(&pumpThread, NULL, threadproc, (void*)this);
@@ -582,7 +718,11 @@ static bool exist_in_pidlist(unsigned short int* pidlist, unsigned short int val
 void *eDVBUsbAdapter::vtunerPump()
 {
 	int pidcount = 0;
-	if (vtunerFd < 0 || demuxFd < 0 || pipeFd[0] < 0) return NULL;
+	if (vtunerFd < 0 || demuxFd < 0 || pipeFd[0] < 0) 
+	{
+		eDebug("[UB]: ATSC debug.. vtunerPump something went wrong !");
+		return NULL;
+	}
 
 #define MSG_PIDLIST         14
 	struct vtuner_message
@@ -594,7 +734,8 @@ void *eDVBUsbAdapter::vtunerPump()
 
 #define DEMUX_BUFFER_SIZE (16 * 1024 * 188 ) /* 3 MB */
 	ioctl(demuxFd, DMX_SET_BUFFER_SIZE, DEMUX_BUFFER_SIZE);
-
+	eDebug("[UB]: ATSC debug.. set DEMUX_BUFFER_SIZE");
+	
 	while (running)
 	{
 		fd_set rset, xset;
@@ -612,12 +753,14 @@ void *eDVBUsbAdapter::vtunerPump()
 			{
 				struct vtuner_message message;
 				memset(message.pidlist, 0xff, sizeof(message.pidlist));
+				eDebug("[UB]: ATSC debug..VTUNER_GET_MESSAGE ioctl");
 				::ioctl(vtunerFd, VTUNER_GET_MESSAGE, &message);
-
+				eDebug("[UB]: ATSC debug..VTUNER_GET_MESSAGE ioctl done");
 				switch (message.type)
 				{
 				case MSG_PIDLIST:
 					/* remove old pids */
+					eDebug("[UB]: ATSC debug..VTUNER_GET_MESSAGE - remove old pids");
 					for (int i = 0; i < 30; i++)
 					{
 						if (pidList[i] == 0xffff)
@@ -639,6 +782,7 @@ void *eDVBUsbAdapter::vtunerPump()
 					}
 
 					/* add new pids */
+					eDebug("[UB]: ATSC debug..VTUNER_GET_MESSAGE - add new pids");
 					for (int i = 0; i < 30; i++)
 					{
 						if (message.pidlist[i] == 0xffff)
@@ -669,6 +813,7 @@ void *eDVBUsbAdapter::vtunerPump()
 					}
 
 					/* copy pids */
+					eDebug("[UB]: ATSC debug..VTUNER_GET_MESSAGE - copy pids");
 					memcpy(pidList, message.pidlist, sizeof(message.pidlist));
 
 					break;
@@ -701,6 +846,7 @@ void eDVBResourceManager::addAdapter(iDVBAdapter *adapter, bool front)
 {
 	int num_fe = adapter->getNumFrontends();
 	int num_demux = adapter->getNumDemux();
+	eDebug("[UB]: ATSC debug.. number FE=%zd, number Demux=%zd",num_fe, num_demux);
 
 	if (front)
 	{
