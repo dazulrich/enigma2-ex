@@ -3510,10 +3510,12 @@ bool eDVBFrontend::changeType(int type)
 #endif
 			break;
 		}
+#ifdef feATSC
 		case feATSC:
 			snprintf(mode, sizeof(mode), "%d", m_modelist[SYS_ATSC]);
 			p[1].u.data = SYS_ATSC;
 			break;
+#endif
 		default:
 			eDebug("not supported delivery system type %i", type);
 			return false;

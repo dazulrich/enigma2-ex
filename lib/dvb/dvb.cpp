@@ -515,18 +515,7 @@ eDVBUsbAdapter::eDVBUsbAdapter(int nr)
 #define VTUNER_SET_ADAPTER 33
 	ioctl(vtunerFd, VTUNER_SET_NAME, name);
 	ioctl(vtunerFd, VTUNER_SET_TYPE, type);
-	ioctl(vtunerFd, VTUNER_SET_FE_INFO, &fe_info);
 	ioctl(vtunerFd, VTUNER_SET_HAS_OUTPUTS, "no");
-
-	unsigned char delsys[8];
-	/* set delsys */
-	delsys[0] = SYS_DVBC_ANNEX_A;
-	delsys[1] = SYS_DVBC_ANNEX_C;
-	delsys[2] = SYS_DVBC_ANNEX_B;
-	delsys[3] = SYS_ATSC;
-	delsys[4] = SYS_UNDEFINED;
-	ioctl(fd, VTUNER_SET_DELSYS, delsys);
-
 	ioctl(vtunerFd, VTUNER_SET_ADAPTER, nr);
 
 	memset(pidList, 0xff, sizeof(pidList));
