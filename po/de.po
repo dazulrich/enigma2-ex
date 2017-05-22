@@ -242,6 +242,18 @@ msgstr "%a %e/%m"
 msgid "%a %e/%m  %-H:%M"
 msgstr "%a %e/%m  %-H:%M"
 
+# EventView.py#L308
+msgid "\n%d.%d.%d, %2d:%02d  -  %s"
+msgstr "\n%02d.%02d.%d, %02d:%02d  -  %s"
+
+# EpgList.py#L686
+msgid "%e/%m, %-H:%M"
+msgstr "%02e.%02m, %H:%M"
+
+# Date & Time in Timer-Log ( Timer & PowerTimer )
+msgid "%Y-%m-%d %H-%M"
+msgstr "%d.%m.%Y %H:%M"
+
 #, python-format
 msgid "%d Gb"
 msgstr "%d GB"
@@ -524,7 +536,7 @@ msgid "4:3 PanScan"
 msgstr "4:3 PanScan"
 
 msgid "4X"
-msgstr "4X"
+msgstr "4x"
 
 msgid "4 hours"
 msgstr "4 Stunden"
@@ -3223,8 +3235,8 @@ msgstr "5V für aktive Antenne aktivieren"
 msgid "Enable Cleanup Wizard?"
 msgstr "Aufräumassistent aktivieren?"
 
-msgid "Enable debug log"
-msgstr "Debug-Log aktivieren"
+msgid "Enable debug log *"
+msgstr "Debug-Log aktivieren *"
 
 msgid "Enable EIT EPG"
 msgstr "EIT EPG aktivieren"
@@ -4240,6 +4252,9 @@ msgstr "Wenn 'Ja' Programmvorschau im EPG. Mit OK die Vorschau, ein zweiter Druc
 
 msgid "If set to 'yes; the infobar will be displayed when Fast Forwarding or Rewinding during media playback."
 msgstr "Wenn 'Ja' eingestellt ist, wird die Infobar bei schnellem Vor- und Rücklauf in der Medienwiedergabe angezeigt."
+
+msgid "If set to 'yes; the infobar will remain shown permanently in 'paused' state (no timeout)."
+msgstr "Wenn 'Ja' eingestellt ist, wird die Infobar im pausierten Zustand dauerhaft angezeigt und nicht ausgeblendet."
 
 msgid "If the text is too long to be displayed on the front panel, it will be repeated (number of times):"
 msgstr "Wenn der Text zu lang für das Display ist läuft es mehrfach durch (Anzahl der Durchgänge):"
@@ -7874,6 +7889,10 @@ msgstr "Zeige Infoleiste beim Sendungswechsel"
 #
 msgid "Show infobar on skip forward/backward"
 msgstr "Zeige Infoleiste beim Spulen"
+
+#
+msgid "Show infobar permanently while paused"
+msgstr "Zeige Infoleiste permanent während Pause"
 
 #
 msgid "Show positioner movement"
@@ -18165,4 +18184,14 @@ msgstr "DNS-Server manuell einstellen"
 msgid "Use only for Wake on WLan (WoW)"
 msgstr "Nur für Wake on WLan (WoW) aktivieren"
 
+msgid "8 character"
+msgstr "8 Zeichen"
 
+msgid "12 character"
+msgstr "12 Zeichen"
+
+msgid "switch 12 to 8 character display mode"
+msgstr "Umschalten von 12 nach 8 Display Zeichen"
+
+msgid "12, show latin-1 characters except for greek and cyrillic, switch to 8 if needed."
+msgstr "12, zeigt latin-1 Zeichensatz außer griechisch und kyrillisch, umschalten auf 8 wenn benötigt."
