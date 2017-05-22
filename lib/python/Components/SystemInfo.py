@@ -70,6 +70,7 @@ SystemInfo["CanUse3DModeChoices"] = fileExists('/proc/stb/fb/3dmode_choices') an
 SystemInfo["HaveMultiBoot"] = (fileCheck("/boot/STARTUP") or fileCheck("/boot/cmdline.txt")) and getMachineBuild() not in ('gb7252')
 SystemInfo["HaveMultiBootHD"] = fileCheck("/boot/STARTUP") and getMachineBuild() not in ('gb7252')
 SystemInfo["HaveMultiBootXC"] = fileCheck("/boot/cmdline.txt")
+SystemInfo["HaveMultiBootAZ"] = getMachineBuild() in ('azboxme', 'azboxminime')
 SystemInfo["need_dsw"] = getBoxType() not in ('osminiplus','osmega')
 SystemInfo["HaveCISSL"] = fileCheck("/etc/ssl/certs/customer.pem") and fileCheck("/etc/ssl/certs/device.pem")
 SystemInfo["HaveTouchSensor"] = getBoxType() in ('dm520', 'dm525', 'dm900')
