@@ -84,6 +84,8 @@ class FlashOnline(Screen):
 			self.devrootfs = "/dev/mmcblk1p3"
 		self.multi = 1
 		self.list = self.list_files("/boot")
+		self.AZrootfsMTD = None
+		self.AZkernelMTD = None
 
 		Screen.setTitle(self, _("Flash On the Fly"))
 		if SystemInfo["HaveMultiBoot"]:
@@ -108,6 +110,27 @@ class FlashOnline(Screen):
 			self.multi = self.read_startup("/boot/" + self.list[self.selection]).split(".",1)[1].split(" ",1)[0]
 			self.multi = self.multi[-1:]
 			print "[Flash Online] MULTI:",self.multi
+		elif SystemInfo["HaveMultiBootAZ"]:
+			self.AZkernelMTD = self.get_current_azboot()
+			self.AZrootfsMTD = self.AZkernelMTD + 1
+			print "[Flash_online: AZkernelMTD=]", self.AZkernelMTD
+			print "[Flash_online: AZrootfsMTD=]", self.AZrootfsMTD
+
+	def get_current_azboot(self):
+		if not os.path.isfile('/boot/.boot'):
+		os.system("mount -t jffs2 mtd2 /boot/")
+		if os.path.isfile('/boot/.boot'):
+			f=open('/boot/.boot','r')
+			current_bootnum = int(f.read())
+			f.close()
+		#os.system("umount -fl /boot")
+		print "[Flash_online: current Azboot=]", current_bootnum
+		if current_bootnum == 0:
+			return 2
+		elif current_bootnum == 2:
+			return 4
+		elif current_bootnum == 3:
+			return 6
 
 	def check_hdd(self):
 		if not os.path.exists("/media/hdd"):
@@ -142,13 +165,13 @@ class FlashOnline(Screen):
 		
 	def blue(self):
 		if self.check_hdd():
-			self.session.open(doFlashImage, online = False, list=self.list[self.selection], multi=self.multi, devrootfs=self.devrootfs)
+			self.session.open(doFlashImage, online = False, list=self.list[self.selection], multi=self.multi, AZrootfsMTD = self.AZrootfsMTD, AZkernelMTD = self.AZkernelMTD, devrootfs=self.devrootfs) 
 		else:
 			self.close()
 
 	def green(self):
 		if self.check_hdd():
-			self.session.open(doFlashImage, online = True, list=self.list[self.selection], multi=self.multi, devrootfs=self.devrootfs)
+			self.session.open(doFlashImage, online = True, list=self.list[self.selection], multi=self.multi, AZrootfsMTD = self.AZrootfsMTD, AZkernelMTD = self.AZkernelMTD, devrootfs=self.devrootfs) 
 		else:
 			self.close()
 
@@ -219,7 +242,7 @@ class doFlashImage(Screen):
 		<widget name="imageList" position="10,10" zPosition="1" size="450,450" font="Regular;20" scrollbarMode="showOnDemand" transparent="1" />
 	</screen>"""
 		
-	def __init__(self, session, online, list=None, multi=None, devrootfs=None ):
+	def __init__(self, session, online, list=None, multi=None, AZrootfsMTD=None, AZkernelMTD=None, devrootfs=None ):
 		Screen.__init__(self, session)
 		self.session = session
 
@@ -234,6 +257,10 @@ class doFlashImage(Screen):
 		self.Online = online
 		self.List = list
 		self.multi=multi
+		self.AZrootfsMTD = AZrootfsMTD
+		self.AZkernelMTD = AZkernelMTD
+		self.AZFlashKernel = False
+		self.AZfailboot = None
 		self.devrootfs=devrootfs
 		self.imagePath = imagePath
 		self.feedurl = feedurl_atv
@@ -254,6 +281,17 @@ class doFlashImage(Screen):
 		self.newfeed = None
 		if os.path.exists('/etc/enigma2/newfeed'):
 			self.newfeed = ReadNewfeed()
+
+	def get_current_azbootnum(self):
+		if not os.path.isfile('/boot/.boot'):
+			os.system("mount -t jffs2 mtd2 /boot/")
+		if os.path.isfile('/boot/.boot'):
+			f=open('/boot/.boot','r')
+			current_bootnum = int(f.read())
+			f.close()
+		#os.system("umount -fl /boot")
+		print "[Flash_online: current Azboot=]", current_bootnum
+		return current_bootnum
 
 	def quit(self):
 		if self.simulate or self.List not in ("STARTUP","cmdline.txt"):
@@ -384,7 +422,10 @@ class doFlashImage(Screen):
 			return
 		if len(job_manager.failed_jobs) == 0:
 			self.flashWithPostFlashActionMode = 'online'
-			self.flashWithPostFlashAction()
+			if self.box().startswith('azboxm'):
+				self.AZFlashOptionsAction()
+			else:
+				self.flashWithPostFlashAction()
 		else:
 			self.session.open(MessageBox, _("Download Failed !!"), type = MessageBox.TYPE_ERROR)
 
@@ -472,6 +513,72 @@ class doFlashImage(Screen):
 				else:
 					self.startInstallLocalCB()
 			else:
+				if self.box().startswith('azboxm'):
+					cmd = "echo "+str(self.AZfailboot)+" > /boot/.boot"
+					os.system(cmd)
+				self.show()
+		else:
+			self.show()
+
+	def AZFlashOptionsAction(self, ret = True):
+		if ret:
+			print "AZFlashOptionsAction"
+			title =_("Please select the flashing target.\n(When flashing onto different boot partition, the system will reboot into the target partition)")
+			list = ((_("Flash Kernel only"), "kernelonly"),
+			(_("Flash Kernel and Image to Boot 0"), "kernelrootfs0"),
+			(_("Flash Kernel and Image to Boot 1"), "kernelrootfs1"),
+			(_("Flash Kernel and Image to Boot 2"), "kernelrootfs2"),
+			(_("Flash 'Image only' to Boot 0"), "rootfs0"),
+			(_("Flash 'Image only' to Boot 1"), "rootfs1"),
+			(_("Flash 'Image only' to Boot 2"), "rootfs2"),
+			(_("Do not flash image"), "abort"))
+			self.session.openWithCallback(self.AZFlashActionCallback, ChoiceBox,title=title,list=list,selection=self.AZSelectedFlashOption())
+		else:
+			self.show()
+
+	def AZSelectedFlashOption(self):
+		index = 0
+		AZCurrentPartion = self.get_current_azbootnum()
+		if not self.AZfailboot:
+			self.AZfailboot = AZCurrentPartion
+
+		if   AZCurrentPartion == 0:
+			index = 1
+		elif AZCurrentPartion == 2:
+			index = 2
+		elif AZCurrentPartion == 3:
+			index = 3
+
+    return index
+
+	def AZFlashActionCallback(self, AZanswer):
+		print "AZFlashActionCallback"
+		if AZanswer is not None:
+			if AZanswer[1]== "kernelonly" or AZanswer[1] == "kernelrootfs0" or AZanswer[1] == "kernelrootfs1" or AZanswer[1] == "kernelrootfs2":
+			## TESTING IF THE FLASHTOOL FOR AZBOX KERNEL FLASHING IS PRESENT
+				if not os.path.exists("/usr/sbin/flashkernel"):
+					text = "Flashkernel not found!! Select one of the 'Flash Image only' options or Abort"
+					self.session.open(MessageBox, _(text), type = MessageBox.TYPE_ERROR, timeout = 10)
+					return False
+				self.AZFlashKernel = True
+			elif AZanswer[1] == "kernelrootfs0" or AZanswer[1] == "rootfs0":
+				self.AZkernelMTD = 2
+				self.AZrootfsMTD = self.AZkernelMTD + 1
+				os.system("echo 0 > /boot/.boot")
+			elif AZanswer[1] == "kernelrootfs1" or AZanswer[1] == "rootfs1":
+				self.AZkernelMTD = 4
+				self.AZrootfsMTD = self.AZkernelMTD + 1
+				os.system("echo 2 > /boot/.boot")
+			elif AZanswer[1] == "kernelrootfs2" or AZanswer[1] == "rootfs2":
+				self.AZkernelMTD = 6
+				self.AZrootfsMTD = self.AZkernelMTD + 1
+				os.system("echo 3 > /boot/.boot")
+
+			if AZanswer[1] != "abort":
+				self.flashWithPostFlashAction()
+			else:
+				cmd = "echo "+str(self.AZfailboot)+" > /boot/.boot"
+				os.system(cmd)
 				self.show()
 		else:
 			self.show()
@@ -493,6 +600,10 @@ class doFlashImage(Screen):
 				text += _("Simulate (no write)")
 				if SystemInfo["HaveMultiBoot"]:
 					cmdlist.append("%s -n -r -k -m%s %s > /dev/null 2>&1" % (ofgwritePath, self.multi, flashTmp))
+				elif SystemInfo["HaveMultiBootAZ"] and self.AZFlashKernel:
+					cmdlist.append("%s -n -rmtd%s -kmtd%s %s > /dev/null 2>&1" % (ofgwritePath, self.AZrootfsMTD, self.AZkernelMTD, flashTmp))
+				elif SystemInfo["HaveMultiBootAZ"]:
+					cmdlist.append("%s -n -rmtd%s %s > /dev/null 2>&1" % (ofgwritePath, self.AZrootfsMTD, flashTmp))
 				else:
 					cmdlist.append("%s -n -r -k %s > /dev/null 2>&1" % (ofgwritePath, flashTmp))
 				self.close()
@@ -508,6 +619,10 @@ class doFlashImage(Screen):
 					if self.List not in ("STARTUP","cmdline.txt"):
 						cmdlist.append("umount -fl /oldroot_bind")
 						cmdlist.append("umount -fl /newroot")
+				elif SystemInfo["HaveMultiBootAZ"] and self.AZFlashKernel:
+					cmdlist.append("%s -rmtd%s -kmtd%s %s > /dev/null 2>&1" % (ofgwritePath, self.AZrootfsMTD, self.AZkernelMTD, flashTmp))
+				elif SystemInfo["HaveMultiBootAZ"]:
+					cmdlist.append("%s -rmtd%s %s > /dev/null 2>&1" % (ofgwritePath, self.AZrootfsMTD, flashTmp))
 				else:
 					cmdlist.append("%s -r -k %s > /dev/null 2>&1" % (ofgwritePath, flashTmp))
 				message = "echo -e '\n"
@@ -546,7 +661,7 @@ class doFlashImage(Screen):
 					dest = flashTmp + '/%s' %KERNELBIN
 					shutil.copyfile(binfile, dest)
 					kernel = False
-				elif name.find('root') > -1 and (name.endswith('.bin') or name.endswith('.jffs2') or name.endswith('.bz2')) and rootfs:
+				elif (name.find('root') > -1 or name.find('image0') > -1) and (name.endswith('.bin') or name.endswith('.jffs2') or name.endswith('.bz2')) and rootfs:
 					binfile = os.path.join(path, name)
 					dest = flashTmp + '/%s' %ROOTFSBIN
 					shutil.copyfile(binfile, dest)
@@ -561,6 +676,11 @@ class doFlashImage(Screen):
 					dest = flashTmp + '/e2jffs2.img'
 					shutil.copyfile(binfile, dest)
 					rootfs = False
+				elif name.find('zbimage-linux-xload') > -1 and kernel:
+					binfile = os.path.join(path, name)
+					dest = flashTmp + '/zbimage-linux-xload'
+					shutil.copyfile(binfile, dest)
+					kernel = False
 					
 	def yellow(self):
 		if not self.Online:
@@ -572,10 +692,16 @@ class doFlashImage(Screen):
 		if ret:
 			from Plugins.SystemPlugins.SoftwareManager.BackupRestore import BackupScreen
 			self.flashWithPostFlashActionMode = 'local'
-			self.session.openWithCallback(self.flashWithPostFlashAction,BackupScreen, runBackup = True)
+			if self.box().startswith('azboxm'):
+				self.session.openWithCallback(self.AZFlashOptionsAction,BackupScreen, runBackup = True)
+			else:
+				self.session.openWithCallback(self.flashWithPostFlashAction,BackupScreen, runBackup = True)
 		else:
 			self.flashWithPostFlashActionMode = 'local'
-			self.flashWithPostFlashAction()
+			if self.box().startswith('azboxm'):
+				self.AZFlashOptionsAction()
+			else:
+				self.flashWithPostFlashAction()
 
 	def startInstallLocalCB(self, ret = None):
 		if self.sel == str(flashTmp):
@@ -655,7 +781,7 @@ class doFlashImage(Screen):
 			lines = the_page.split('\n')
 			tt = len(box)
 			for line in lines:
-				if line.find("<a href='%s/" % box) > -1:
+				if line.find("<a href='%s/" % box) > -1 and line.find("usb") > -1:
 					t = line.find("<a href='%s/" % box)
 					if self.feed == "atv" or self.feed == "atv2":
 						self.imagelist.append(line[t+tt+10:t+tt+tt+39])

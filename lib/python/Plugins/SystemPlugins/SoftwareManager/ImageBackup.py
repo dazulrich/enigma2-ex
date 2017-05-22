@@ -23,7 +23,7 @@ from boxbranding import getBoxType, getMachineBrand, getMachineName, getDriverDa
 VERSION = "Version 6.0 openATV"
 
 HaveGZkernel = True
-if getMachineBuild() in ('et1x000',"vuuno4k", "vuultimo4k", "vusolo4k", "spark", "spark7162", "hd51", "hd52", "sf4008", "dags7252", "gb7252", "vs1500","h7",'xc7439'):
+if getMachineBuild() in ('azboxme','azboxminime','et1x000',"vuuno4k", "vuultimo4k", "vusolo4k", "spark", "spark7162", "hd51", "hd52", "sf4008", "dags7252", "gb7252", "vs1500","h7",'xc7439'):
 	HaveGZkernel = False
 
 def Freespace(dev):
@@ -217,6 +217,7 @@ class ImageBackup(Screen):
 
 		self.UBINIZE = "/usr/sbin/ubinize"
 		self.NANDDUMP = "/usr/sbin/nanddump"
+		self.FLASHKERNEL = "/usr/sbin/flashkernel"
 		self.WORKDIR= "%s/bi" %self.DIRECTORY
 		self.TARGET="XX"
 
@@ -227,6 +228,10 @@ class ImageBackup(Screen):
 			return
 		if not path.exists(self.NANDDUMP):
 			text = "%s not found !!" %self.NANDDUMP
+			self.session.open(MessageBox, _(text), type = MessageBox.TYPE_ERROR)
+			return
+		if not path.exists(self.FLASHKERNEL) and self.MODEL in ("azboxme","azboxminime"):
+			text = "%s not found !!" %self.FLASHKERNEL
 			self.session.open(MessageBox, _(text), type = MessageBox.TYPE_ERROR)
 			return
 
@@ -319,6 +324,8 @@ class ImageBackup(Screen):
 			cmdlist.append("dd if=/dev/%s of=%s/kernel.bin" % (self.MTDKERNEL ,self.WORKDIR))
 		elif self.MTDKERNEL == "mmcblk0p1" or self.MTDKERNEL == "mmcblk0p3":
 			cmdlist.append("dd if=/dev/%s of=%s/%s" % (self.MTDKERNEL ,self.WORKDIR, self.KERNELBIN))
+		elif self.MODEL in ("azboxme","azboxminime"): 
+			cmdlist.append("flashkernel r %s/vmlinux.gz" % (self.WORKDIR)) 
 		else:
 			cmdlist.append("nanddump -a -f %s/vmlinux.gz /dev/%s" % (self.WORKDIR, self.MTDKERNEL))
 		cmdlist.append('echo " "')
@@ -423,6 +430,8 @@ class ImageBackup(Screen):
 			cmdlist.append('echo "This file forces the update." > %s/force.update' %self.MAINDEST)
 		elif self.MODEL in ("novaip" , "zgemmai55" , "sf98", "xpeedlxpro",'evoslim'):
 			cmdlist.append('echo "This file forces the update." > %s/force' %self.MAINDEST)
+		elif self.MODEL in ("azboxme","azboxminime"):
+			cmdlist.append('echo "This file is not actually used." > %s/force' %self.MAINDEST)
 		else:
 			cmdlist.append('echo "rename this file to "force" to force an update without confirmation" > %s/noforce' %self.MAINDEST)
 
