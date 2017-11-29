@@ -68,11 +68,13 @@ def getAboutText():
 	cpuMHz = ""
 	if getMachineBuild() in ('vusolo4k','vuultimo4k'):
 		cpuMHz = "   (1,5 GHz)"
-	elif getMachineBuild() in ('formuler1', 'triplex'):
+	elif getMachineBuild() in ('formuler1tc','formuler1', 'triplex', 'tiviaraplus'):
 		cpuMHz = "   (1,3 GHz)"
-	elif getMachineBuild() in ('vuuno4k','dm900', 'gb7252', 'dags7252'):
+	elif getMachineBuild() in ('u5'):
+		cpuMHz = "   (1,6 GHz)"
+	elif getMachineBuild() in ('vuuno4kse','vuuno4k','dm900','dm920', 'gb7252', 'dags7252','xc7439','8100s'):
 		cpuMHz = "   (1,7 GHz)"
-	elif getMachineBuild() in ('et1x000','hd52','hd51','sf4008','vs1500','h7'):
+	elif getMachineBuild() in ('sf5008','et13000','et1x000','hd52','hd51','sf4008','vs1500','h7'):
 		try:
 			import binascii
 			f = open('/sys/firmware/devicetree/base/cpus/cpu@0/clock-frequency', 'rb')
@@ -113,6 +115,13 @@ def getAboutText():
 		f.close()
 		if bootname: bootname = "   (%s)" %bootname 
 		AboutText += _("Selected Image:\t%s") % "STARTUP_" + image + bootname + "\n"
+	elif path.exists('/boot/cmdline.txt'):
+		f = open('/boot/cmdline.txt', 'r')
+		f.seek(38)
+		image = f.read(1) 
+		f.close()
+		if bootname: bootname = "   (%s)" %bootname 
+		AboutText += _("Selected Image:\t%s") % "STARTUP_" + image + bootname + "\n"
 
 	AboutText += _("Version:\t%s") % getImageVersion() + "\n"
 	AboutText += _("Build:\t%s") % getImageBuild() + "\n"
@@ -128,7 +137,7 @@ def getAboutText():
 	AboutText += _("GStreamer:\t%s") % about.getGStreamerVersionString() + "\n"
 	AboutText += _("Python:\t%s") % about.getPythonVersionString() + "\n"
 
-	if getMachineBuild() not in ('et1x000','hd51','hd52','vusolo4k','vuuno4k','vuultimo4k','sf4008','dm820','dm7080','dm900', 'gb7252', 'dags7252', 'vs1500','h7'):
+	if getMachineBuild() not in ('sf5008','et13000','et1x000','hd51','hd52','vusolo4k','vuuno4k','vuuno4kse','vuultimo4k','sf4008','dm820','dm7080','dm900','dm920', 'gb7252', 'dags7252', 'vs1500','h7','xc7439','8100s'):
 		AboutText += _("Installed:\t%s") % about.getFlashDateString() + "\n"
 
 	AboutText += _("Last update:\t%s") % getEnigmaVersionString() + "\n"
@@ -162,6 +171,14 @@ def getAboutText():
 		f = open('/proc/stb/fp/temp_sensor_avs', 'r')
 		tempinfo = f.read()
 		f.close()
+	elif path.exists('/sys/devices/virtual/thermal/thermal_zone0/temp'):
+		try:
+			f = open('/sys/devices/virtual/thermal/thermal_zone0/temp', 'r')
+			tempinfo = f.read()
+			tempinfo = tempinfo[:-4]
+			f.close()
+		except:
+			tempinfo = ""
 	if tempinfo and int(tempinfo.replace('\n', '')) > 0:
 		mark = str('\xc2\xb0')
 		AboutText += _("Processor temperature:\t%s") % tempinfo.replace('\n', '').replace(' ','') + mark + "C\n"

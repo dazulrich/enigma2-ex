@@ -14305,10 +14305,6 @@ msgstr ""
 msgid "Choose which tuner to configure."
 msgstr "Elige qué sintonizador configurar."
 
-#
-msgid "Clean network trash can's"
-msgstr "Vaciar las papeleras en red"
-
 msgid "Clone TV screen to LCD"
 msgstr "Clonar pantalla de TV al LCD"
 
@@ -14875,7 +14871,7 @@ msgstr "Habilitar reloj parpadeante en LCD"
 msgid "Enable blinking rec symbol on the LCD Display"
 msgstr "Habilitar el símbolo de grabación parpadeando en el LCD"
 
-msgid "Enable debug log"
+msgid "Enable debug log *"
 msgstr "Habilitar historial de depuración"
 
 msgid "Enable fallback remote receiver"
@@ -15763,7 +15759,7 @@ msgstr "Mostrar movimiento del motor"
 msgid "Show record indicator"
 msgstr "Mostrar indicador de grabación"
 
-msgid "Show recording symbol depending on recording type"
+msgid "Show recording symbol"
 msgstr "Mostrar símbolo de grabación según tipo de grabación"
 
 msgid "Show screensaver"
@@ -15797,7 +15793,7 @@ msgstr "Mostrar paquetes de traducción"
 msgid "Show transponder remaining/elapsed as"
 msgstr "Mostrar el transpondedor restante/transcurrido como"
 
-msgid "Show warning before box restart based on recording type"
+msgid "Show warning before restart"
 msgstr "Mostrar advertencia antes de reiniciar según el tipo de grabación"
 
 msgid "Show warning when timeshift is stopped"
