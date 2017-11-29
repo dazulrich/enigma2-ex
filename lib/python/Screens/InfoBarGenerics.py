@@ -500,9 +500,12 @@ class SecondInfoBar(Screen):
 		extended = event.getExtendedDescription()
 		if description and extended:
 			description += '\n'
+		elif description and not extended:
+			extended = description
 		text = description + extended
 		self.setTitle(event.getEventName())
 		self["epg_description"].setText(text)
+		self["FullDescription"].setText(extended)
 		serviceref = self.currentService
 		eventid = self.event.getEventId()
 		refstr = serviceref.ref.toString()
@@ -533,6 +536,7 @@ class InfoBarShowHide(InfoBarScreenSaver):
 	STATE_HIDING = 1
 	STATE_SHOWING = 2
 	STATE_SHOWN = 3
+	skipToggleShow = False
 
 	def __init__(self):
 		self["ShowHideActions"] = ActionMap( ["InfobarShowHideActions"] ,
@@ -711,6 +715,7 @@ class InfoBarShowHide(InfoBarScreenSaver):
 			#idx = config.usage.infobar_timeout.index
 			#if idx:
 			#	self.hideTimer.start(idx*1000, True)
+		self.skipToggleShow = False
 
 	def doShow(self):
 		self.show()
@@ -723,6 +728,7 @@ class InfoBarShowHide(InfoBarScreenSaver):
 		self.hideTimer.stop()
 		self.DimmingTimer.start(300, True)
 		self.dimmed = config.usage.show_infobar_dimming_speed.value
+		self.skipToggleShow = False
 
 	def doHide(self):
 		if self.__state != self.STATE_HIDDEN:
@@ -759,6 +765,9 @@ class InfoBarShowHide(InfoBarScreenSaver):
 #					pass
 
 	def toggleShow(self):
+		if self.skipToggleShow:
+			self.skipToggleShow = False
+			return
 		if not hasattr(self, "LongButtonPressed"):
 			self.LongButtonPressed = False
 		if not self.LongButtonPressed:
@@ -816,6 +825,7 @@ class InfoBarShowHide(InfoBarScreenSaver):
 		if self.execing:
 			self.show()
 			self.hideTimer.stop()
+			self.skipToggleShow = False
 
 	def unlockShow(self):
 		if config.usage.show_infobar_do_dimming.value and self.lastResetAlpha is False:
@@ -2519,6 +2529,9 @@ class InfoBarSeek:
 			return
 		self.doPause(False)
 		self.setSeekState(self.SEEK_STATE_PLAY)
+		if config.usage.show_infobar_on_skip.value and not config.usage.show_infobar_locked_on_pause.value:
+			self.showAfterSeek()
+		self.skipToggleShow = True # skip 'break' action (toggleShow) after 'make' action (unPauseService)
 
 	def doPause(self, pause):
 		if pause:
@@ -2586,7 +2599,7 @@ class InfoBarSeek:
 			else:
 				self.setSeekState(self.SEEK_STATE_PLAY)
 		seekable.seekRelative(pts<0 and -1 or 1, abs(pts))
-		if abs(pts) > 100 and config.usage.show_infobar_on_skip.value:
+		if (abs(pts) > 100 or not config.usage.show_infobar_locked_on_pause.value) and config.usage.show_infobar_on_skip.value:
 			self.showAfterSeek()
 
 	def DoSeekAction(self):
@@ -2765,6 +2778,11 @@ class InfoBarSeek:
 		if self.seekstate == self.SEEK_STATE_PLAY or self.seekstate == self.SEEK_STATE_EOF:
 			self.lockedBecauseOfSkipping = False
 			self.unlockShow()
+		elif self.seekstate == self.SEEK_STATE_PAUSE and not config.usage.show_infobar_locked_on_pause.value:
+			if config.usage.show_infobar_on_skip.value:
+				self.lockedBecauseOfSkipping = False
+				self.unlockShow()
+				self.showAfterSeek()
 		else:
 			wantlock = self.seekstate != self.SEEK_STATE_PLAY
 			if config.usage.show_infobar_on_skip.value:
@@ -3060,7 +3078,7 @@ class InfoBarExtensions:
 		return _("Restart Network")
 
 	def getRestartNetwork(self):
-			return [((boundFunction(self.getRestartNetworkname), boundFunction(self.openRestartNetwork), lambda: True), None)]
+		return [((boundFunction(self.getRestartNetworkname), boundFunction(self.openRestartNetwork), lambda: True), None)]
 
 	def get3DSetupname(self):
 		return _("OSD 3D Setup")
@@ -3560,6 +3578,8 @@ class InfoBarINFOpanel:
 			isHBBTV = True
 		if os.path.isfile("/usr/lib/enigma2/python/Plugins/Extensions/WebkitHbbTV/plugin.pyo"):
 			isHBBTV = True
+		if os.path.isfile("/usr/lib/enigma2/python/Plugins/Extensions/QtHbbtv/plugin.pyo"):
+			isHBBTV = True
 
 		if isWEBBROWSER or isHBBTV:
 			service = self.session.nav.getCurrentService()
@@ -3641,7 +3661,7 @@ class InfoBarQuickMenu:
 		if config.workaround.blueswitch.value == "1":
 			self.showExtensionSelection()
 		else:
-			self.quickmenuStart()			
+			self.quickmenuStart()
 
 	def quickmenuStart(self):
 		try:
@@ -4945,7 +4965,7 @@ class InfoBarHdmi:
 		self.hdmi_enabled_full = False
 		self.hdmi_enabled_pip = False
 
-		if getMachineBuild() in ('inihdp', 'hd2400', 'dm7080', 'dm820', 'dm900', 'gb7252', 'vuultimo4k'):
+		if getMachineBuild() in ('inihdp', 'hd2400', 'dm7080', 'dm820', 'dm900', 'dm920', 'gb7252', 'vuultimo4k','et13000','sf5008') or getBoxType() in ('spycat4k','spycat4kcombo'):
 			if not self.hdmi_enabled_full:
 				self.addExtension((self.getHDMIInFullScreen, self.HDMIInFull, lambda: True), "blue")
 			if not self.hdmi_enabled_pip:
@@ -4995,7 +5015,7 @@ class InfoBarHdmi:
 			return _("Turn off HDMI-IN PiP mode")
 
 	def HDMIInPiP(self):
-		if getMachineBuild() in ('dm7080', 'dm820', 'dm900'):
+		if getMachineBuild() in ('dm7080', 'dm820', 'dm900', 'dm920'):
 			f=open("/proc/stb/hdmi-rx/0/hdmi_rx_monitor","r")
 			check=f.read()
 			f.close()
@@ -5033,7 +5053,7 @@ class InfoBarHdmi:
 					del self.session.pip
 
 	def HDMIInFull(self):
-		if getMachineBuild() in ('dm7080', 'dm820', 'dm900'):
+		if getMachineBuild() in ('dm7080', 'dm820', 'dm900', 'dm920'):
 			f=open("/proc/stb/hdmi-rx/0/hdmi_rx_monitor","r")
 			check=f.read()
 			f.close()
@@ -5048,7 +5068,10 @@ class InfoBarHdmi:
 				self.oldvideomode_60hz=f.read()
 				f.close()
 				f=open("/proc/stb/video/videomode","w")
-				f.write("720p")
+				if getMachineBuild() in ('dm900', 'dm920'):
+					f.write("1080p")
+				else:
+					f.write("720p")
 				f.close()
 				f=open("/proc/stb/audio/hdmi_rx_monitor","w")
 				f.write("on")

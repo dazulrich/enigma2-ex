@@ -99,6 +99,7 @@ def InitUsageConfig():
 	config.usage.infobar_timeout = ConfigSelection(default = "5", choices = [("0", _("No timeout"))] + choicelist)
 	config.usage.show_infobar_on_zap = ConfigYesNo(default = True)
 	config.usage.show_infobar_on_skip = ConfigYesNo(default = True)
+	config.usage.show_infobar_locked_on_pause = ConfigYesNo(default = True)
 	config.usage.show_infobar_on_event_change = ConfigYesNo(default = False)
 	config.usage.show_infobar_channel_number = ConfigYesNo(default = False)	
 	config.usage.show_infobar_lite = ConfigYesNo(default = False)
@@ -411,7 +412,7 @@ def InitUsageConfig():
 
 	config.usage.blinking_display_clock_during_recording = ConfigYesNo(default = False)
 	
-	if getBoxType() in ('zgemmah7','vimastec1000', 'vimastec1500','et7000', 'et7500', 'et8000', 'triplex', 'formuler1', 'mutant1200', 'solo2', 'mutant1265', 'mutant1100', 'mutant500c', 'mutant530c', 'mutant1500', 'osminiplus', 'ax51', 'mutant51', '9910lx', '9911lx'):
+	if getBoxType() in ('tiviaraplus','formuler1tc','zgemmah7','vimastec1000', 'vimastec1500','et7000', 'et7500', 'et8000', 'triplex', 'formuler1', 'mutant1200', 'solo2', 'mutant1265', 'mutant1100', 'mutant500c', 'mutant530c', 'mutant1500', 'osminiplus', 'ax51', 'mutant51', '9910lx', '9911lx'):
 		config.usage.blinking_rec_symbol_during_recording = ConfigSelection(default = "Channel", choices = [
 						("Rec", _("REC Symbol")), 
 						("RecBlink", _("Blinking REC Symbol")), 
@@ -740,28 +741,14 @@ def InitUsageConfig():
 		("1", _("Internal hdd only")),
 		("3", _("Everywhere"))])
 	config.misc.erase_flags.addNotifier(updateEraseFlags, immediate_feedback = False)
-
+	
 	if SystemInfo["ZapMode"]:
-		try:
-			if os.path.exists("/proc/stb/video/zapping_mode"):
-				zapoptions = [("mute", _("Black screen")), ("hold", _("Hold screen"))]
-				zapfile = "/proc/stb/video/zapping_mode"
-			else:
-				zapoptions = [("mute", _("Black screen")), ("hold", _("Hold screen")), ("mutetilllock", _("Black screen till locked")), ("holdtilllock", _("Hold till locked"))]
-				zapfile = "/proc/stb/video/zapmode"
-		except:
-			zapoptions = [("mute", _("Black screen")), ("hold", _("Hold screen")), ("mutetilllock", _("Black screen till locked")), ("holdtilllock", _("Hold till locked"))]
-			zapfile = "/proc/stb/video/zapmode"
-
 		def setZapmode(el):
-			try:
-				file = open(zapfile, "w")
-				file.write(el.value)
-				file.close()
-			except:
-				pass
-		config.misc.zapmode = ConfigSelection(default = "mute", choices = zapoptions )
+			open(SystemInfo["ZapMode"], "w").write(el.value)
+		config.misc.zapmode = ConfigSelection(default = "mute", choices = [
+			("mute", _("Black screen")), ("hold", _("Hold screen")), ("mutetilllock", _("Black screen till locked")), ("holdtilllock", _("Hold till locked"))])
 		config.misc.zapmode.addNotifier(setZapmode, immediate_feedback = False)
+
 	config.usage.historymode = ConfigSelection(default = "1", choices = [("0", _("Just zap")), ("1", _("Show menu"))])
 
 	config.subtitles = ConfigSubsection()

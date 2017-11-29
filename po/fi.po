@@ -3001,16 +3001,8 @@ msgstr "Kiertopolarisaatio oikea"
 msgid "CIselectMainMenu"
 msgstr ""
 
-msgid "Clean network trash can's"
-msgstr "Tyhjennä verkkolevyllä olevat roskakorit"
-
-#
-#  Ohjatun asennuksen (Startup Wizard) kutosruudun valintateksti
-#  Tekstin pitää ilmeisesti olla melko lyhyt, koska käyttäjän
-#  valittavaksi annetut vaihtoehdot lyhentävät tilaa toisesta
-#  päästä.
 msgid "Clean network trash cans"
-msgstr "Tyhjennä verkkolevyjen roskakorit"
+msgstr "Tyhjennä verkkolevyllä olevat roskakorit"
 
 msgid "Cleaning Trashes"
 msgstr "Tyhjennetään roskakoreja"
@@ -5081,7 +5073,7 @@ msgstr ""
 msgid "Enable CIHelper for SLOT CI1"
 msgstr ""
 
-msgid "Enable debug log"
+msgid "Enable debug log *"
 msgstr "Ota käyttöön vianselvitysloki"
 
 msgid "Enable digital downmix"
@@ -12879,7 +12871,7 @@ msgstr "Tallennusmerkki"
 msgid "Show Record Movies"
 msgstr ""
 
-msgid "Show recording symbol depending on recording type"
+msgid "Show recording symbol"
 msgstr "Näytä REC-symboli riippuen tallennusmuodosta"
 
 msgid "Show Restart Network in Extensions list *"
@@ -13028,7 +13020,7 @@ msgstr ""
 msgid "Show VCR scart on main menu"
 msgstr "Näytä VCR-Scart päävalikossa"
 
-msgid "Show warning before box restart based on recording type"
+msgid "Show warning before restart"
 msgstr "Varoita uudelleenkäynnistyksestä"
 
 #

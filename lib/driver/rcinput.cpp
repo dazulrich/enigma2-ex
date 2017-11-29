@@ -213,6 +213,12 @@ void eRCDeviceInputDev::handleCode(long rccode)
 */
 #endif
 
+#if KEY_VIDEO_TO_KEY_ANGLE
+	if (ev->code == KEY_VIDEO) {
+		ev->code = KEY_ANGLE;
+	}
+#endif
+
 #if KEY_F7_TO_KEY_MENU
 	if (ev->code == KEY_F7) {
 		ev->code = KEY_MENU;
@@ -254,6 +260,14 @@ void eRCDeviceInputDev::handleCode(long rccode)
 	{
 		/* formuler and triplex remote send wrong keycode */
 		ev->code = KEY_MEDIA;
+	}
+#endif
+
+#if KEY_VIDEO_TO_KEY_FAVORITES
+	if (ev->code == KEY_VIDEO)
+	{
+		/* formuler rcu fav key send key_media change this to  KEY_FAVORITES */
+		ev->code = KEY_FAVORITES;
 	}
 #endif
 
@@ -358,11 +372,33 @@ void eRCDeviceInputDev::handleCode(long rccode)
 	}
 #endif
 
+#if KEY_CONTEXT_MENU_TO_KEY_AUX
+	if (ev->code == KEY_CONTEXT_MENU)
+	{
+		/* Gigablue New Remote rc has a KEY_HDMI-IN, which sends KEY_CONTEXT_MENU events. Correct this, so we do not have to place hacks in the keymaps. */
+		ev->code = KEY_AUX;
+	}
+#endif
+
 #if KEY_F2_TO_KEY_F6
 	if (ev->code == KEY_F2)
 	{
 		/* Gigablue New Remote rc has a KEY_PIP key, which sends KEY_F2 events. Correct this, so we do not have to place hacks in the keymaps. */
 		ev->code = KEY_F6;
+	}
+#endif
+
+#if KEY_F1_TO_KEY_F6
+	if (ev->code == KEY_F1)
+	{
+		ev->code = KEY_F6;
+	}
+#endif
+
+#if KEY_F2_TO_KEY_AUX
+	if (ev->code == KEY_F2)
+	{
+		ev->code = KEY_AUX;
 	}
 #endif
 

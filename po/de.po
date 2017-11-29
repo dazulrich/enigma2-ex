@@ -242,6 +242,18 @@ msgstr "%a %e/%m"
 msgid "%a %e/%m  %-H:%M"
 msgstr "%a %e/%m  %-H:%M"
 
+# EventView.py#L308
+msgid "\n%d.%d.%d, %2d:%02d  -  %s"
+msgstr "\n%02d.%02d.%d, %02d:%02d  -  %s"
+
+# EpgList.py#L686
+msgid "%e/%m, %-H:%M"
+msgstr "%02e.%02m, %H:%M"
+
+# Date & Time in Timer-Log ( Timer & PowerTimer )
+msgid "%Y-%m-%d %H-%M"
+msgstr "%d.%m.%Y %H:%M"
+
 #, python-format
 msgid "%d Gb"
 msgstr "%d GB"
@@ -524,7 +536,7 @@ msgid "4:3 PanScan"
 msgstr "4:3 PanScan"
 
 msgid "4X"
-msgstr "4X"
+msgstr "4x"
 
 msgid "4 hours"
 msgstr "4 Stunden"
@@ -1812,6 +1824,12 @@ msgstr "Wählen Sie, ob AC3-Tonspuren ( Dolby Digital ) zu Stereo heruntergerech
 msgid "Choose whether DTS channel sound tracks should be downmixed to stereo."
 msgstr "Wählen Sie, ob DTS-Tonspuren zu Stereo heruntergerechnet werden soll."
 
+msgid "Choose whether DTS channel sound tracks should be downmixed or transcoded."
+msgstr "Wählen Sie, ob DTS-Tonspuren zu Stereo heruntergerechnet werden soll oder transkodiert."
+
+msgid "Choose whether WMA Pro channel sound tracks should be downmixed or transcoded."
+msgstr "Wählen Sie, ob WMA Pro Tonspuren zu Stereo heruntergerechnet werden soll oder transkodiert."
+
 msgid "Choose whether AAC sound tracks should be transcoded."
 msgstr "Wählen Sie, ob AAC-Tonspuren transkodiert werden sollen."
 
@@ -2586,6 +2604,9 @@ msgstr "Netzwerkadapter-Einstellungen"
 msgid "Devices"
 msgstr "Geräte"
 
+msgid "Device: "
+msgstr "Gerät: "
+
 #
 msgid "DiSEqC"
 msgstr "DiSEqC"
@@ -3223,8 +3244,8 @@ msgstr "5V für aktive Antenne aktivieren"
 msgid "Enable Cleanup Wizard?"
 msgstr "Aufräumassistent aktivieren?"
 
-msgid "Enable debug log"
-msgstr "Debug-Log aktivieren"
+msgid "Enable debug log *"
+msgstr "Debug-Log aktivieren *"
 
 msgid "Enable EIT EPG"
 msgstr "EIT EPG aktivieren"
@@ -4241,6 +4262,9 @@ msgstr "Wenn 'Ja' Programmvorschau im EPG. Mit OK die Vorschau, ein zweiter Druc
 msgid "If set to 'yes; the infobar will be displayed when Fast Forwarding or Rewinding during media playback."
 msgstr "Wenn 'Ja' eingestellt ist, wird die Infobar bei schnellem Vor- und Rücklauf in der Medienwiedergabe angezeigt."
 
+msgid "If set to 'yes; the infobar will remain shown permanently in 'paused' state (no timeout)."
+msgstr "Wenn 'Ja' eingestellt ist, wird die Infobar im pausierten Zustand dauerhaft angezeigt und nicht ausgeblendet."
+
 msgid "If the text is too long to be displayed on the front panel, it will be repeated (number of times):"
 msgstr "Wenn der Text zu lang für das Display ist läuft es mehrfach durch (Anzahl der Durchgänge):"
 
@@ -4458,7 +4482,7 @@ msgid "Internal hdd only"
 msgstr "Nur interne Festplatte"
 
 #
-msgid "Invalid Location"
+msgid "Invalid location"
 msgstr "Unzulässiger Ort"
 
 #
@@ -6254,7 +6278,7 @@ msgid "Port:"
 msgstr "Port:"
 
 msgid "Position of finished Timers in Timerlist"
-msgstr "Position beenderter Timer-Aufnahmen in Timer-Liste"
+msgstr "Position beendeter Timer-Aufnahmen in Timer-Liste"
 
 #
 msgid "Positioner"
@@ -7874,6 +7898,10 @@ msgstr "Zeige Infoleiste beim Sendungswechsel"
 #
 msgid "Show infobar on skip forward/backward"
 msgstr "Zeige Infoleiste beim Spulen"
+
+#
+msgid "Show infobar permanently while paused"
+msgstr "Zeige Infoleiste permanent während Pause"
 
 #
 msgid "Show positioner movement"
@@ -13839,12 +13867,12 @@ msgid "Long << / >>"
 msgstr "Lang << / >>"
 
 #: Einstellunen HDMI CEC
-msgid "Put your %s %s in standby"
-msgstr "%s %s in Standby versetzen"
+msgid "Put your AV Receiver in standby"
+msgstr "AV Receiver in Standby versetzen"
 
 #: Einstellunen HDMI CEC
-msgid "Wakeup your %s %s from standby"
-msgstr "%s %s aus dem Standby aufwecken"
+msgid "Wakeup your AV Receiver from standby"
+msgstr "AV Receiver aus dem Standby aufwecken"
 
 #: Einstellunen Netzwerk Menue
 msgid "Mounts Setup"
@@ -14375,10 +14403,6 @@ msgstr "Gelöschte Aufnahmen nach (Tagen) aus dem Papierkorb entfernen"
 msgid "Clean network trash cans"
 msgstr "Netzwerk-Papierkörbe leeren"
 
-#
-msgid "Clean network trash can's"
-msgstr "Netzwerk-Papierkörbe leeren"
-
 msgid "When enabled, network trash can's are probed for cleaning."
 msgstr "Wenn aktiviert, werden die Netzwerk-Papierkörbe geleert."
 
@@ -14517,7 +14541,7 @@ msgid ""
 "Are you sure you want to restore your STB backup?\n"
 "STB will restart after the restore"
 msgstr ""
-"Sind Sie sicher, dass die Einstellungen Ihres Receivers wieder hergestellt werden sollen?\n"
+"Sind Sie sicher, dass die Einstellungen Ihres Receivers wiederhergestellt werden sollen?\n"
 "\n"
 "Ihr Receiver wird neu gestartet, nachdem die Einstellungen wiederhergestellt wurden!"
 
@@ -15977,6 +16001,10 @@ msgid "Turn on HDMI-IN Full screen mode"
 msgstr "HDMI IN als Vollbild wiedergeben"
 
 #
+msgid "Turn off HDMI-IN Full screen mode"
+msgstr "HDMI IN als Vollbild beenden"
+
+#
 msgid "Turn on HDMI-IN PiP mode"
 msgstr "HDMI IN als Bild in Bild wiedergeben"
 
@@ -16923,7 +16951,7 @@ msgid "When enabled, a recording is allowed to abort streaming, when there are n
 msgstr "Wenn aktiviert, werden Streamings bei Aufnahmen beendet, falls kein freier Tuner zur Verfügung steht."
 
 # data/setup.xml
-msgid "Show recording symbol depending on recording type"
+msgid "Show recording symbol"
 msgstr "Zeige Aufnahmesymbol, wenn Aufnahmetyp"
 
 # data/setup.xml
@@ -16931,7 +16959,7 @@ msgid "Configure whether the 'recording' symbol (in the display skin and LCD ski
 msgstr "Legt fest, ob das Aufnahme-Symbol (auf Bildschirm und LCD Display) nur bei echten Aufnahmen sichtbar ist oder auch bei Streaming bzw. Pseudo-Aufnahmen (z.B. EPG Refresh)"
 
 # data/setup.xml
-msgid "Show warning before box restart based on recording type"
+msgid "Show warning before restart"
 msgstr "Zeige Warnung bei Neustart, wenn Aufnahmetyp"
 
 # data/setup.xml
@@ -17125,6 +17153,22 @@ msgid "You can switch with left and right this tuner types %s"
 msgstr ""
 "Hier können Sie mit Pfeiltasten Links/Rechts\n"
 "den Tuner-Typ ändern. %s"
+
+# satconfig.py
+msgid "Force LNB Power"
+msgstr "LNB Power erzwingen"
+
+# satconfig.py
+msgid "Force LNB Tuner Power settings."
+msgstr "Einstellung für LNB Power."
+
+# satconfig.py
+msgid "Force ToneBurst"
+msgstr "Toneburst erzwingen"
+
+# satconfig.py
+msgid "Force LNB Tuner ToneBurst settings."
+msgstr "Einstellung für Toneburst."
 
 #: ParentalControlSetup.py:109 (4.2)
 msgid "Reload black-/white lists"
@@ -17610,7 +17654,7 @@ msgid ""
 "<This tuner is configured automatically>"
 msgstr ""
 "\n"
-"<Diese Tuner wird automatisch verwaltet>"
+"<Dieser Tuner wird automatisch verwaltet>"
 
 msgid "HDMI Colorspace"
 msgstr "HDMI Farbraum"
@@ -18053,6 +18097,14 @@ msgstr ""
 "Bitte stellen Sie für Tuner A\n"
 "das Hybrid-Tuner-Modell ein, ändern mit Steuerkreuz links/rechts"
 
+#: data/startwizard.xml - test
+msgid ""
+"Please set up tuner B\n"
+"For Hybrid Tuner Models switch Tuner Type with left and right keys"
+msgstr ""
+"Bitte stellen Sie für Tuner B\n"
+"das Hybrid-Tuner-Modell ein, ändern mit Steuerkreuz links/rechts"
+
 #: InfoBarGenerics.py:4204
 msgid "4_3_letterbox"
 msgstr "4:3 Letterbox"
@@ -18129,6 +18181,24 @@ msgstr "Wirklich einen Neustart in den Wartungsmodus durchführen?"
 msgid "controlled by HDMI"
 msgstr "Steuerung über HDMI"
 
+msgid "use best / controlled by HDMI"
+msgstr "Best Mögliches / Steuerung über HDMI"
+
+msgid "convert to AC3"
+msgstr "Konvertieren zu AC3"
+
+msgid "force AC3plus"
+msgstr "Erzwinge AC3 Plus"
+
+msgid "convert to DTS"
+msgstr "Konvertieren zu DTS"
+
+msgid "force_dts"
+msgstr "Erzwinge DTS"
+
+msgid "convert to multi-channel PCM"
+msgstr "Konvertieren zu Mehrkanalton PCM"
+
 msgid "always"
 msgstr "immer"
 
@@ -18165,4 +18235,17 @@ msgstr "DNS-Server manuell einstellen"
 msgid "Use only for Wake on WLan (WoW)"
 msgstr "Nur für Wake on WLan (WoW) aktivieren"
 
+msgid "8 character"
+msgstr "8 Zeichen"
 
+msgid "12 character"
+msgstr "12 Zeichen"
+
+msgid "switch 12 to 8 character display mode"
+msgstr "Umschalten von 12 nach 8 Display Zeichen"
+
+msgid "12, show latin-1 characters except for greek and cyrillic, switch to 8 if needed."
+msgstr "12, zeigt latin-1 Zeichensatz außer griechisch und kyrillisch, umschalten auf 8 wenn benötigt."
+
+msgid "Incorrect format for skip value: '%s'\nSkip cancelled."
+msgstr "Es wurde kein gültiger Wert eingegeben: '%s'\nSprung wird abgebrochen."

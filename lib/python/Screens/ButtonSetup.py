@@ -68,6 +68,10 @@ def getButtonSetupKeys():
 		(_("Directory long"), "directory_long", ""),
 		(_("Back/Recall"), "back", ""),
 		(_("Back/Recall") + " " + _("long"), "back_long", ""),
+		(_("History"), "archive", ""),
+		(_("History long"), "archive_long", ""),
+		(_("Aspect"), "mode", ""),
+		(_("Aspect long"), "mode_long", ""),
 		(_("Home"), "home", ""),
 		(_("End"), "end", ""),
 		(_("Next"), "next", ""),
@@ -112,7 +116,9 @@ def getButtonSetupKeys():
 		(_("F3"), "f3", ""),
 		(_("F3 long"), "f3_long", ""),
 		(_("F4"), "f4", ""),
-		(_("F4 long"), "f4_long", ""),]
+		(_("F4 long"), "f4_long", ""),
+		(_("PIP"), "f6", ""),
+		(_("PIP long"), "f6_long", ""),]
 
 config.misc.ButtonSetup = ConfigSubsection()
 config.misc.ButtonSetup.additional_keys = ConfigYesNo(default=True)
@@ -184,11 +190,16 @@ def getButtonSetupFunctions():
 		ButtonSetupFunctions.append((_("Swap PIP"), "Infobar/swapPiP", "InfoBar"))
 		ButtonSetupFunctions.append((_("Move PIP"), "Infobar/movePiP", "InfoBar"))
 		ButtonSetupFunctions.append((_("Toggle PIPzap"), "Infobar/togglePipzap", "InfoBar"))
-	ButtonSetupFunctions.append((_("Activate HbbTV (Redbutton)"), "Infobar/activateRedButton", "InfoBar"))		
-	ButtonSetupFunctions.append((_("Toggle HDMI-In full screen"), "Infobar/HDMIInFull", "InfoBar"))
-	ButtonSetupFunctions.append((_("Toggle HDMI-In PiP"), "Infobar/HDMIInPiP", "InfoBar"))
+	ButtonSetupFunctions.append((_("Activate HbbTV (Redbutton)"), "Infobar/activateRedButton", "InfoBar"))
+	if SystemInfo["HDMIin"]:
+		ButtonSetupFunctions.append((_("Toggle HDMI-In full screen"), "Infobar/HDMIInFull", "InfoBar"))
+		ButtonSetupFunctions.append((_("Toggle HDMI-In PiP"), "Infobar/HDMIInPiP", "InfoBar"))
 	if SystemInfo["LcdLiveTV"]:
 		ButtonSetupFunctions.append((_("Toggle LCD LiveTV"), "Infobar/ToggleLCDLiveTV", "InfoBar"))
+	if SystemInfo["HaveMultiBootHD"]:
+		ButtonSetupFunctions.append((_("MultiBoot Selector"), "Module/Screens.MultiBootStartup/MultiBootStartup", "InfoBar"))
+	if SystemInfo["HaveMultiBootGB"]:
+		ButtonSetupFunctions.append((_("MultiBoot Selector"), "Module/Screens.MultiBootStartupGB/MultiBootStartup", "InfoBar"))
 	ButtonSetupFunctions.append((_("Hotkey Setup"), "Module/Screens.ButtonSetup/ButtonSetup", "Setup"))
 	ButtonSetupFunctions.append((_("Software update"), "Module/Screens.SoftwareUpdate/UpdatePlugin", "Setup"))
 	ButtonSetupFunctions.append((_("CI (Common Interface) Setup"), "Module/Screens.Ci/CiSelection", "Setup"))
